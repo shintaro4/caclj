@@ -51,13 +51,47 @@
    ["-h" "--help"]])
 
 
+(defn usage [options-summary]
+  (->> ["An elementary cellular automata."
+        ""
+        "Usage: lein run [options]"
+        ""
+        "Options:"
+        options-summary]
+       (string/join \newline)))
+
+
+(defn error-msg [errors]
+  (str "The following errors occurred while parsing your command:\n\n"
+       (string/join \newline errors)))
+
+
+(defn validate-args
+  "Validate command line arguments. "
+  [args]
+  (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)]
+    (cond
+      (:help options) ; help => exit OK with usage summary
+      {:exit-message (usage summary) :ok? true}
+      errors ; errors => exit with description of errors
+      {:exit-message (error-msg errors)}
+      :else
+      {:options options})))
+
+
+(defn exit [status msg]
+  (println msg)
+  (System/exit status))
+
+
 (defn -main
-  "main function."
   [& args]
-  (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)
-        rule (init-rule (:rule options))]
-    (loop [cells INITIAL-CELLS
-           t (:times options)]
-      (print-cells cells t)
-      (if (> (dec t) 0)
-        (recur (next-gen rule cells) (dec t))))))
+  (let [{:keys [options exit-message ok?]} (validate-args args)]
+    (if exit-message
+      (exit (if ok? 0 1) exit-message)
+      (let [rule (init-rule (:rule options))]
+        (loop [cells INITIAL-CELLS
+               t (:times options)]
+          (print-cells cells t)
+          (if (> (dec t) 0)
+            (recur (next-gen rule cells) (dec t))))))))
