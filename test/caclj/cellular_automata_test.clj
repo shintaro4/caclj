@@ -1,9 +1,9 @@
-(ns caclj.core-test
+(ns caclj.cellular-automata-test
   (:require [clojure.test :refer :all]
-            [caclj.core :refer :all]))
+            [caclj.cellular-automata :refer :all]))
 
 
-(deftest test-init-rule
+(deftest init-rule-test
   (is (= (init-rule 0)
          [false false false false false false false false]))
   (is (= (init-rule 1)
@@ -16,6 +16,6 @@
   (is (thrown? java.lang.AssertionError (init-rule 256))))
 
 
-(deftest test-next-gen
+(deftest next-gen-test
   (is (= (next-gen (init-rule 30) [true])
          [true true true])))
