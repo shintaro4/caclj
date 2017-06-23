@@ -1,6 +1,7 @@
 (ns caclj.cellular-automata
   (:require [clojure.string :as string]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clojure.spec.test.alpha :as stest]))
 
 (def RULE-SEQUENCE-SIZE 8)
 (def INITIAL-CELLS [true])
@@ -18,6 +19,10 @@
 (s/fdef init-rule
         :args (s/and (s/cat :number int?) #(<= 0 (:number %) 255))
         :ret :caclj/rule)
+;(stest/instrument `init-rule)
+;(init-rule -1)
+;(init-rule 256)
+;(stest/check `init-rule)
 
 (defn next-gen
   "Returns the next generations."
