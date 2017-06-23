@@ -1,21 +1,23 @@
 (ns caclj.cellular-automata
   (:require [clojure.string :as string]
-            [clojure.tools.cli :refer [parse-opts]]))
+            [clojure.spec.alpha :as s]))
 
-
-(def RULE-BIT-MASK 255)
 (def RULE-SEQUENCE-SIZE 8)
 (def INITIAL-CELLS [true])
 
+(s/def :caclj/rule (s/coll-of boolean? :kind vector? :count RULE-SEQUENCE-SIZE))
+(s/def :caclj/cells (s/coll-of boolean? :kind vector? :min-count 1))
 
 (defn init-rule
   "Returns a boolean sequence that expresses the rule number."
   [number]
-  (assert (<= 0 number RULE-BIT-MASK))
-  (let [bin-str (Integer/toBinaryString (bit-and number RULE-BIT-MASK))
+  (let [bin-str (Integer/toBinaryString number)
         pad (repeat (- RULE-SEQUENCE-SIZE (count bin-str)) \0)]
     (mapv #(if (= \1 %) true false) (reverse (concat pad bin-str)))))
 
+(s/fdef init-rule
+        :args (s/and (s/cat :number int?) #(<= 0 (:number %) 255))
+        :ret :caclj/rule)
 
 (defn next-gen
   "Returns the next generations."
@@ -29,6 +31,9 @@
                (get rule (+ l c r)))]
     (mapv fun (range -1 (+ len 1)))))
 
+(s/fdef next-gen
+        :args (s/cat :rule :caclj/rule :cells :caclj/cells)
+        :ret :caclj/cells)
 
 (defn print-cells
   "Prints cells nicely."
@@ -36,3 +41,7 @@
   (let [pad (string/join "" (repeat t " "))
         s (string/join "" (map #(if (true? %) "o" " ") cells))]
     (println (str pad s))))
+
+(s/fdef print-cells
+        :args (s/and (s/cat :cells :caclj/cells :t int?) #(< 0 (:t %)))
+        :ret nil)
