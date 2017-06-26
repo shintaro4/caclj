@@ -12,6 +12,7 @@
 (defn init-rule
   "Returns a boolean sequence that expresses the rule number."
   [number]
+  (assert (<= 0 number 255) "invalid number")
   (let [bin-str (Integer/toBinaryString number)
         pad (repeat (- RULE-SEQUENCE-SIZE (count bin-str)) \0)]
     (mapv #(if (= \1 %) true false) (reverse (concat pad bin-str)))))
@@ -22,7 +23,6 @@
 ;(stest/instrument `init-rule)
 ;(init-rule -1)
 ;(init-rule 256)
-;(stest/check `init-rule)
 
 (defn next-gen
   "Returns the next generations."
@@ -43,6 +43,7 @@
 (defn print-cells
   "Prints cells nicely."
   [cells t]
+  (assert (> t 0) "invalid times")
   (let [pad (string/join "" (repeat t " "))
         s (string/join "" (map #(if (true? %) "o" " ") cells))]
     (println (str pad s))))
