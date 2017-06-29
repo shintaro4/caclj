@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]
             [clojure.tools.cli :refer [parse-opts]]
             [caclj.cellular-automata :as ca])
-  (gen-class))
+  (:gen-class))
 
 
 (def cli-options
