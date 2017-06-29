@@ -34,7 +34,7 @@
                    c (if (and (<= 0 %) (< % len) (get cells %)) 2 0)
                    r (if (and (<= 0 _n) (< _n len) (get cells (mod _n len))) 1 0)]
                (get rule (+ l c r)))]
-    (mapv fun (range -1 (+ len 1)))))
+    (mapv fun (range -1 (inc len)))))
 
 (s/fdef next-gen
         :args (s/cat :rule :caclj/rule :cells :caclj/cells)
@@ -43,11 +43,11 @@
 (defn print-cells
   "Prints cells nicely."
   [cells t]
-  (assert (> t 0) "invalid times")
+  (assert (pos? t) "invalid times")
   (let [pad (string/join "" (repeat t " "))
         s (string/join "" (map #(if (true? %) "o" " ") cells))]
     (println (str pad s))))
 
 (s/fdef print-cells
-        :args (s/and (s/cat :cells :caclj/cells :t int?) #(< 0 (:t %)))
+        :args (s/and (s/cat :cells :caclj/cells :t int?) #(pos? (:t %)))
         :ret nil)

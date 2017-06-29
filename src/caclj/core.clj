@@ -13,18 +13,19 @@
    ["-t" "--times TIMES" "The number ob the generations"
     :default 16
     :parse-fn #(Integer/parseInt %)
-    :validate [#(< 0 %) "Must be a positive number"]]
+    :validate [pos? "Must be a positive number"]]
    ["-h" "--help"]])
 
 
 (defn usage [options-summary]
-  (->> ["An elementary cellular automata."
-        ""
-        "Usage: lein run [options]"
-        ""
-        "Options:"
-        options-summary]
-       (string/join \newline)))
+  (string/join
+   \newline
+   ["An elementary cellular automata."
+    ""
+    "Usage: lein run [options]"
+    ""
+    "Options:"
+    options-summary]))
 
 
 (defn error-msg [errors]
@@ -59,5 +60,5 @@
         (loop [cells ca/INITIAL-CELLS
                t (:times options)]
           (ca/print-cells cells t)
-          (if (> (dec t) 0)
+          (if (pos? (dec t))
             (recur (ca/next-gen rule cells) (dec t))))))))
