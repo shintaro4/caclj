@@ -1,53 +1,59 @@
 (ns caclj.cellular-automata
   (:require [clojure.string :as string]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.test.alpha :as stest]))
+            [clojure.spec.alpha :as s]))
 
 (def RULE-SEQUENCE-SIZE 8)
-(def INITIAL-CELLS [true])
 
-(s/def :caclj/rule (s/coll-of boolean? :kind vector? :count RULE-SEQUENCE-SIZE))
-(s/def :caclj/cells (s/coll-of boolean? :kind vector? :min-count 1))
-
-(defn init-rule
-  "Returns a boolean sequence that expresses the rule number."
+(def cell? #{\1 \0})
+(s/def :caclj/rule-map-key (s/coll-of cell? :kind vector? :count 3))
+(s/def :caclj/rule-map (s/every-kv :caclj/rule-map-key cell? :count RULE-SEQUENCE-SIZE))
+(defn build-rule-map
+  "Returns the rule map of the number."
   [number]
   (assert (<= 0 number 255) "invalid number")
-  (let [bin-str (Integer/toBinaryString number)
-        pad (repeat (- RULE-SEQUENCE-SIZE (count bin-str)) \0)]
-    (mapv #(if (= \1 %) true false) (reverse (concat pad bin-str)))))
+  (let [_keyfn #(vec (take-last 3 (concat (repeat 3 \0) (Integer/toBinaryString %))))
+        keys (map _keyfn (reverse (range RULE-SEQUENCE-SIZE)))
+        _bin-str (Integer/toBinaryString number)
+        _pad (repeat (- RULE-SEQUENCE-SIZE (count _bin-str)) \0)
+        values (concat _pad _bin-str)]
+      (zipmap keys values)))
 
-(s/fdef init-rule
+(s/fdef build-rule-map
         :args (s/and (s/cat :number int?) #(<= 0 (:number %) 255))
-        :ret :caclj/rule)
-;(stest/instrument `init-rule)
-;(init-rule -1)
-;(init-rule 256)
+        :ret :caclj/rule-map)
 
-(defn next-gen
-  "Returns the next generations."
-  [rule cells]
-  (let [len (count cells)
-        fun #(let [_p (dec %)
-                   _n (inc %)
-                   l (if (and (<= 0 _p) (< _p len) (get cells (mod _p len))) 4 0)
-                   c (if (and (<= 0 %) (< % len) (get cells %)) 2 0)
-                   r (if (and (<= 0 _n) (< _n len) (get cells (mod _n len))) 1 0)]
-               (get rule (+ l c r)))]
-    (mapv fun (range -1 (inc len)))))
 
-(s/fdef next-gen
-        :args (s/cat :rule :caclj/rule :cells :caclj/cells)
-        :ret :caclj/cells)
+(s/def :caclj/cells (s/coll-of cell? :kind vector? :min-count 2))
+(defn first-generation
+  "returns the cells of the first generation."
+  [times]
+  (assert (<= 1 times) "invalid times")
+  (let [t (* times 2)]
+    (assoc (vec (repeat t \0)) (quot (dec t) 2) \1)))
+
+(s/fdef first-generation
+  :args (s/and (s/cat :times int?) #(<= 1 (:times %)))
+  :ret :caclj/cells)
+
+
+(defn evolve
+  "Returns the next generation"
+  [rule-map cells]
+  (mapv rule-map (partition 3 1 (repeat \0) (cons \0 cells))))
+
+(s/fdef evolve
+  :args (s/cat :rule-map :caclj/rule-map :cells :caclj/cells)
+  :ret :caclj/cells)
+
 
 (defn print-cells
   "Prints cells nicely."
-  [cells t]
-  (assert (pos? t) "invalid times")
-  (let [pad (string/join "" (repeat t " "))
-        s (string/join "" (map #(if (true? %) "o" " ") cells))]
-    (println (str pad s))))
+  [cells]
+  (let [t (count cells)]
+    (loop [i 0]
+      (println (apply str (nth cells i)))
+      (when (< (inc i) t) (recur (inc i))))))
 
 (s/fdef print-cells
-        :args (s/and (s/cat :cells :caclj/cells :t int?) #(pos? (:t %)))
+        :args (s/cat :cells :caclj/cells)
         :ret nil)

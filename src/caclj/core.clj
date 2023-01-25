@@ -56,9 +56,10 @@
   (let [{:keys [options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
-      (let [rule (ca/init-rule (:rule options))]
-        (loop [cells ca/INITIAL-CELLS
-               t (:times options)]
-          (ca/print-cells cells t)
-          (if (pos? (dec t))
-            (recur (ca/next-gen rule cells) (dec t))))))))
+      (let [times (:times options)
+            _rule-map (ca/build-rule-map (:rule options))
+            _next-gen #(ca/evolve _rule-map %)
+            result (->> (ca/first-generation times)
+                    (iterate _next-gen)
+                    (take times))]
+        (ca/print-cells result)))))
