@@ -58,8 +58,9 @@
       (exit (if ok? 0 1) exit-message)
       (let [times (:times options)
             _rule-map (ca/build-rule-map (:rule options))
-            _next-gen #(ca/evolve _rule-map %)
-            result (->> (ca/first-generation times)
-                    (iterate _next-gen)
-                    (take times))]
-        (ca/print-cells result)))))
+            _next-gen #(ca/evolve _rule-map %)]
+           (->> (ca/first-generation times)
+             (iterate _next-gen)
+             (take times)
+             (map #(ca/convert-characters ca/CELL-CHARACTER-MAP %))
+             (run! println))))))
